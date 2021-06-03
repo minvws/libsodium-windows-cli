@@ -20,6 +20,9 @@ namespace NaCLI.Options
 
         [Option('d', "data", Required = true, HelpText = "Data to encrypt encoded as a base64 string")]
         public string Message { get; set; }
+
+        [Option('n', "nonce", Required = false, HelpText = "Nonce encoded as a base64 string, required if the data is a PublicBox message")]
+        public string Nonce { get; set; }
         
         [Option('K', "public-key", Required = true, HelpText = "Path/file name to the public key")]
         public string PublicKeyFile { get; set; }

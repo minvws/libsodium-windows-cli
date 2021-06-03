@@ -30,7 +30,8 @@ namespace NaCLI
 
         private static Type[] LoadVerbs()
         {
-            return Assembly.GetExecutingAssembly().GetTypes().Where(t => t.GetCustomAttribute<VerbAttribute>() != null).ToArray();
+            return Assembly.GetExecutingAssembly().GetTypes().Where(t => t.GetCustomAttribute<VerbAttribute>() != null)
+                .ToArray();
         }
 
         private static void Run(object options)
@@ -57,7 +58,7 @@ namespace NaCLI
         {
             Console.WriteLine("Error parsing input, please check your call and try again.");
 
-            foreach(var e in errors) Console.WriteLine(e.Tag);
+            foreach (var e in errors) Console.WriteLine(e.Tag);
 
             Environment.Exit(-1);
         }
@@ -86,28 +87,67 @@ namespace NaCLI
                 HandleFileErrors(e, "private key");
                 Environment.Exit(-1);
             }
-            
+
             var keyPair = new KeyPair(publicKey, privateKey);
 
             // Get the message to encode
-            var messageText = options.Message;
-            var messageBytes = Encoding.UTF8.GetBytes(messageText);
+            var messageBytes = Encoding.UTF8.GetBytes(options.Message);
 
             // Encrypt
-            var cypherBytes = SealedPublicKeyBox.Create(messageBytes, keyPair);
-            
-            // Encode the output
-            var encodedOutput = options.OutputEncoding switch
+            byte[] cipherBytes;
+            byte[] nonceBytes = null;
+            if (options.SealedBox)
             {
-                OutputEncodingType.b64 => Encoding.UTF8.GetBytes(Convert.ToBase64String(cypherBytes)),
-                OutputEncodingType.hex => Encoding.UTF8.GetBytes(Convert.ToHexString(cypherBytes)),
-                _ => cypherBytes // RAW unless otherwise stated
+                cipherBytes = SealedPublicKeyBox.Create(messageBytes, keyPair);
+            }
+            else
+            { 
+                nonceBytes = PublicKeyBox.GenerateNonce();
+                cipherBytes = PublicKeyBox.Create(messageBytes, nonceBytes, keyPair.PrivateKey, keyPair.PublicKey);
+            }
+
+            // Encode the cipher text output
+            var encodedCipherBytes = options.OutputEncoding switch
+            {
+                OutputEncodingType.b64 => Encoding.UTF8.GetBytes(Convert.ToBase64String(cipherBytes)),
+                OutputEncodingType.hex => Encoding.UTF8.GetBytes(Convert.ToHexString(cipherBytes)),
+                _ => Array.Empty<byte>()
             };
 
+            Output(encodedCipherBytes, options.OutputFile, "Data");
 
-            // Dump the cypher bytes to stdout
-            using var stdOut = Console.OpenStandardOutput();
-            stdOut.Write(encodedOutput);
+            if (nonceBytes == null) Environment.Exit(0);
+
+            // Encode the output
+            var encodedNonceBytes = options.OutputEncoding switch
+            {
+                OutputEncodingType.b64 => Encoding.UTF8.GetBytes(Convert.ToBase64String(nonceBytes)),
+                OutputEncodingType.hex => Encoding.UTF8.GetBytes(Convert.ToHexString(nonceBytes)),
+                _ => Array.Empty<byte>()
+            };
+
+            Output(encodedNonceBytes, options.OutputFileNonce, "Nonce");
+        }
+
+        private static void Output(byte[] bytes, string outputFile, string contents)
+        {
+            if (!string.IsNullOrWhiteSpace(outputFile))
+            {
+                try
+                {
+                    File.WriteAllBytes(outputFile, bytes);
+                    Console.WriteLine($"{contents} has been written to: { outputFile }");
+                }
+                catch (Exception e)
+                {
+                    HandleFileErrors(e, outputFile);
+                    Environment.Exit(-1);
+                }
+            }
+            else
+            {
+                Console.WriteLine($"{contents}: { Encoding.UTF8.GetString(bytes) }");
+            }
         }
 
         private static void HandleDecrypt(DecryptOptions options)
@@ -136,8 +176,8 @@ namespace NaCLI
             }
 
             var keyPair = new KeyPair(publicKey, privateKey);
-            
-            // Get the message to encode
+
+            // Get the message to decode
             byte[] messageBytes = null;
             switch (options.InputEncoding)
             {
@@ -148,14 +188,27 @@ namespace NaCLI
                     messageBytes = Convert.FromHexString(options.Message);
                     break;
                 default:
-                    Console.WriteLine($"Unexpected error! Encoding { options.InputEncoding} was unexpected.");
+                    Console.WriteLine($"Unexpected error! Encoding {options.InputEncoding} was unexpected.");
                     Environment.Exit(-1);
                     break;
             }
-            
-            // Decrypt and output the raw bytes to std:out
+
+            byte[] outputBytes;
+
+            if (string.IsNullOrWhiteSpace(options.Nonce))
+            {
+                outputBytes = SealedPublicKeyBox.Open(messageBytes, keyPair);
+            }
+            else
+            {
+                byte[] nonceBytes = Convert.FromBase64String(options.Nonce);
+
+                outputBytes = PublicKeyBox.Open(messageBytes, nonceBytes, keyPair.PrivateKey, keyPair.PublicKey);
+            }
+
+            // Save 
             using var stdOut = Console.OpenStandardOutput();
-            stdOut.Write(SealedPublicKeyBox.Open(messageBytes, keyPair));
+            stdOut.Write(outputBytes);
         }
 
 
@@ -184,8 +237,8 @@ namespace NaCLI
             }
 
             Console.WriteLine("KeyPair generated successfully!");
-            Console.WriteLine($"Public key is saved to: { options.PublicKeyPath}");
-            Console.WriteLine($"Private key is saved to: { options.PublicKeyPath}");
+            Console.WriteLine($"Public key is saved to: {options.PublicKeyPath}");
+            Console.WriteLine($"Private key is saved to: {options.PublicKeyPath}");
         }
 
         private static void HandleFileErrors(Exception e, string fileName)
@@ -212,8 +265,7 @@ namespace NaCLI
                     break;
             }
 
-            Console.WriteLine($"Error saving the {fileName}: {error}.");
+            Console.WriteLine($"Error saving {fileName}: {error}.");
         }
     }
 }
-

@@ -21,14 +21,22 @@ namespace NaCLI.Options
         [Option('k', "public-key", Required = true, HelpText = "Path/file name to the private key")]
         public string PrivateKeyFile { get; set; }
 
-        [Option('f', "output-encoding", Required = false, HelpText = "Specifies the encoding used for the output: raw, hex or base64.", Default = OutputEncodingType.raw)]
+        [Option('f', "output-encoding", Required = false, HelpText = "Specifies the encoding used for the output: hex or base64.", Default = OutputEncodingType.b64)]
         public OutputEncodingType OutputEncoding { get; set; }
+
+        [Option('O', "output-data", Required = false, HelpText = "Path/file to the data output file; the encrypted data will be output to this file if provided")]
+        public string OutputFile { get; set; }
+
+        [Option('o', "output-nonce", Required = false, HelpText = "Path/file to the nonce output file; the nonce data will be output to this file if provided")]
+        public string OutputFileNonce { get; set; }
+
+        [Option('S', "sealed-box", Required = false, HelpText = "Encrypt the message using a sealed box so that the receiver cannot identify the sender.")]
+        public bool SealedBox { get; set; }
     }
 
     [SuppressMessage("ReSharper", "InconsistentNaming")]
     public enum OutputEncodingType
     {
-        raw,
         hex,
         b64
     }
