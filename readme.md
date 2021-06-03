@@ -12,7 +12,7 @@ Generate keys:
 
     nacli.exe keygen -O "public.key" -o "private.key"
 
-** Example keys are used from now on so you should be able to run these commands as is. **
+**Example keys are used from now on so you should be able to run these commands as is.**
 
 Encrypt with output to the console/std:out encoded as a b64 string:
 
