@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "sodiumencrypt": {
+      "commandName": "Project",
+      "commandLineArgs": "\"I LOVE BEES\" \"public.key\" \"private.key\" \"ApfhgGRsdy0rx+lzV9P3rAqL3yRfqmmYcfDX6/mYKCR0vgj9j2OI/Pds4X4BjKBZaNMvvnUsCQ30B30=\""
+    }
+  }
+}
