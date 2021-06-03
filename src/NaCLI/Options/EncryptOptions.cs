@@ -17,7 +17,7 @@ namespace NaCLI.Options
         [Option('k', "public-key", Required = true, HelpText = "Path/file name to the private key")]
         public string PrivateKeyFile { get; set; }
 
-        [Option('f', "output-encoding", Required = false, HelpText = "Specifies the encoding used for the output: raw, hex or base64.", Default = InputEncodingType.hex)]
+        [Option('f', "output-encoding", Required = false, HelpText = "Specifies the encoding used for the output: raw, hex or base64.", Default = OutputEncodingType.raw)]
         public OutputEncodingType OutputEncoding { get; set; }
     }
 
