@@ -1,0 +1,1 @@
+dotnet publish src/NaCLI/NaCLI.csproj -o publish
