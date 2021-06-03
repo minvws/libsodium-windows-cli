@@ -5,6 +5,11 @@
     <TargetFramework>net5.0</TargetFramework>
     <AssemblyName>NaCLI</AssemblyName>
     <RootNamespace>NaCLI</RootNamespace>
+    <Product />
+    <Company>De Staat der Nederlanden, Ministerie van Volksgezondheid, Welzijn en Sport.</Company>
+    <Authors>Ryan Barrett</Authors>
+    <PackageProjectUrl>https://github.com/minvws/libsodium-windows-cli</PackageProjectUrl>
+    <Copyright>Copyright 2021 De Staat der Nederlanden, Ministerie van Volksgezondheid, Welzijn en Sport</Copyright>
   </PropertyGroup>
 
   <ItemGroup>
