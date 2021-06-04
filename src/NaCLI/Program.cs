@@ -175,6 +175,16 @@ namespace NaCLI
                 Environment.Exit(-1);
             }
 
+            // If the length is greater than 32, it is probably base64 encoded.
+            if(publicKey.Length > 32)
+            {
+                publicKey = Convert.FromBase64String(Encoding.UTF8.GetString(publicKey));
+            }
+            if(privateKey.Length > 32)
+            {
+                privateKey = Convert.FromBase64String(Encoding.UTF8.GetString(privateKey));
+            }
+
             var keyPair = new KeyPair(publicKey, privateKey);
 
             // Get the message to decode
@@ -201,7 +211,21 @@ namespace NaCLI
             }
             else
             {
-                byte[] nonceBytes = Convert.FromBase64String(options.Nonce);
+                byte[] nonceBytes = null;
+
+                switch (options.InputEncoding)
+                {
+                    case InputEncodingType.b64:
+                       nonceBytes = Convert.FromBase64String(options.Nonce);
+                       break;
+                    case InputEncodingType.hex:
+                        nonceBytes = Convert.FromHexString(options.Nonce);
+                        break;
+                    default:
+                        Console.WriteLine($"Unexpected error! Encoding {options.InputEncoding} was unexpected.");
+                        Environment.Exit(-1);
+                        break;
+                }
 
                 outputBytes = PublicKeyBox.Open(messageBytes, nonceBytes, keyPair.PrivateKey, keyPair.PublicKey);
             }
