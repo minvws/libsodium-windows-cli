@@ -1,32 +1,23 @@
-# This is a basic workflow to help you get started with Actions
-
 name: Publish
 
-# Controls when the action will run. 
 on:
-  # Triggers the workflow on push or pull request events but only for the main branch
   push:
     branches: [ main ]
   pull_request:
     branches: [ main ]
 
-  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
   build:
-    # The type of runner that the job will run on
     runs-on: windows-latest
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v2
-
-      # Runs a single command using the runners shell
-      - name: Build and publish
-        run: |
-          cd $GITHUB_WORKSPACE
-          publish.bat
+        - uses: actions/checkout@v3
+        - uses: actions/setup-dotnet@v3
+          with:
+            dotnet-version: 5.0.x
+        - run: |
+            dotnet publish src/NaCLI/NaCLI.csproj --self-contained -r win-x64 -o publish/win-x64
+            dotnet publish src/NaCLI/NaCLI.csproj --self-contained -r win-x86 -o publish/win-x86
+            dotnet publish src/NaCLI/NaCLI.csproj --self-contained -r win7-x64 -o publish/win7-x64
+            dotnet publish src/NaCLI/NaCLI.csproj --self-contained -r win7-x86 -o publish/win7-x86
